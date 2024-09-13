@@ -24,7 +24,8 @@ road = Road(window)
 #Run once at the beginning of simulation
 def Start():
     road.Generate((0,0)) # Generate inital road points
-    road.Recenter() # Reposition road so car initialized on the road
+    angle = road.Recenter() # Reposition road so car initialized on the road
+    car.SetRotation(angle) # Adjust car orientation
     
 #Run every frame update
 def Update():

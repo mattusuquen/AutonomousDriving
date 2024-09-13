@@ -26,6 +26,8 @@ class Road:
     def Recenter(self):
         '''
         Recenter at beginning of the simulation such that car is centered in the middle of the road
+
+        return car angle to realign car orientation
         '''
 
         if not self.points: raise Exception('Road points have not been generated')
@@ -33,7 +35,16 @@ class Road:
         WIDTH,HEIGHT = self.window.get_size()
 
         i = len(self.points)//2
+
         self.alignment = WIDTH//2-self.points[i][0]
+        
+        x1,x2 = self.points[i][0], self.points[i - 1][0]
+        y1,y2 = self.points[i][1], self.points[i - 1][1]
+
+        m = (y2 - y1) / (x2 - x1)
+        angle = math.degrees(-math.atan(m))
+
+        return angle + 90 if angle < 0 else angle - 90
     
     def Generate(self,offset):
         '''
@@ -79,4 +90,5 @@ class Road:
                 (self.points[i + 1][0] + self.road_width / 2, self.points[i + 1][1]),
                 (self.points[i][0] + self.road_width / 2, self.points[i][1]), 
                 width=3)
+        
 

@@ -25,6 +25,8 @@ class Car:
         # Rescale car image
         self.car_image = pygame.transform.scale(self.car_image, self.car_size)
 
+    def SetRotation(self, angle): self.car_angle = angle
+
     def Move(self):
         '''
         Handle manual user input for car movement
