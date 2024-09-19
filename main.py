@@ -1,7 +1,7 @@
 import pygame
 from car import Car
 from road import Road
-
+import math
 #Initialize Pygame
 pygame.init()
 
@@ -26,6 +26,14 @@ def Start():
     road.Generate((0,0)) # Generate inital road points
     angle = road.Recenter() # Reposition road so car initialized on the road
     car.SetRotation(angle) # Adjust car orientation
+
+    car_size, car_angle = car.GetSize(), math.radians(car.GetAngle())
+    X = road.GetSensorData(car_size,car_angle)
+    X[len(X)-1][len(X[0])-1] = car_angle
+    f = open("initial_data.txt", "w")
+    for x in X: 
+        f.write('\t'.join(str(i) for i in x))
+        f.write('\n')
     
 #Run every frame update
 def Update():
@@ -37,10 +45,12 @@ def Update():
 
     #Update for car movement based on user input
     car.Move()
-    car_pos = car.GetPosition()
+    car_pos, car_size, car_angle = car.GetPosition(), car.GetSize(), math.radians(car.GetAngle())
+    #print(car_angle)
     #Generate road dynamically based on car position
     road.Generate(car_pos)
-
+    X = road.GetSensorData(car_size,car_angle)
+    #print(X)
     #Render the road and car on to the window
     road.Render()
     car.Render()

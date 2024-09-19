@@ -25,7 +25,17 @@ class Car:
         # Rescale car image
         self.car_image = pygame.transform.scale(self.car_image, self.car_size)
 
+
+    # Set car angle
     def SetRotation(self, angle): self.car_angle = angle
+    
+    def ClipRotation(self):
+        '''
+        Ensure car angle range stays within (-180,180)
+        '''
+        
+        if self.car_angle > 180: self.car_angle -= 360
+        if self.car_angle < -180: self.car_angle += 360
 
     def Move(self):
         '''
@@ -38,10 +48,14 @@ class Car:
         # Handle acceleration and deceleration
         if keys[pygame.K_UP]:self.car_speed -= self.acceleration
         if keys[pygame.K_DOWN]:self.car_speed += self.brake_deceleration
+
         # Only turn if car is moving (forward or backward)
         if (keys[pygame.K_DOWN] or keys[pygame.K_UP]) and keys[pygame.K_LEFT]: self.car_angle += self.turn_speed
         if (keys[pygame.K_DOWN] or keys[pygame.K_UP]) and keys[pygame.K_RIGHT]: self.car_angle -= self.turn_speed
         
+        # Clip car angle to (-180,180)
+        self.ClipRotation()
+
         # Limit speed
         if self.car_speed > self.max_speed: self.car_speed = self.max_speed
         if self.car_speed < -self.max_speed // 2: self.car_speed = -self.max_speed // 2
@@ -58,6 +72,10 @@ class Car:
     # Return the position of the car
     def GetPosition(self): return (self.car_x,self.car_y)
     
+    def GetSize(self): return self.car_size
+    
+    def GetAngle(self): return self.car_angle
+
     def Render(self):
         '''
         Render car on to window
