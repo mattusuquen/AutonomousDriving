@@ -9,7 +9,7 @@ pygame.init()
 FPS = 60
 WIDTH, HEIGHT = 1000, 1000
 window = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption('Car Simulator')
+pygame.display.set_caption('Driving Simulator')
 
 #Colors
 BACKGROUND_COLOR = (100, 225, 100)
@@ -27,14 +27,6 @@ def Start():
     angle = road.Recenter() # Reposition road so car initialized on the road
     car.SetRotation(angle) # Adjust car orientation
 
-    car_size, car_angle = car.GetSize(), math.radians(car.GetAngle())
-    X = road.GetSensorData(car_size,car_angle)
-    X[len(X)-1][len(X[0])-1] = car_angle
-    f = open("initial_data.txt", "w")
-    for x in X: 
-        f.write('\t'.join(str(i) for i in x))
-        f.write('\n')
-    f.close()
 #Run every frame update
 def Update():
     #Set simulation FPS
@@ -45,17 +37,15 @@ def Update():
 
     #Update for car movement based on user input
     car.Move()
-    car_pos, car_size, car_angle = car.GetPosition(), car.GetSize(), math.radians(car.GetAngle())
-    #print(car_angle)
+    car.Run()
     #Generate road dynamically based on car position
+    car_pos = car.GetPosition()
     road.Generate(car_pos)
-    car.GetSensorData()
-    X = car.GetSensorPts()
+
     #Render the road and car on to the window
     road.Render()
     car.Render()
-    road.RenderSensor(X)
-    #print(car.Reward())
+    
     # Update display
     pygame.display.update()
 

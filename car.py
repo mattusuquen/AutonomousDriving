@@ -1,7 +1,11 @@
 import pygame
 import math
 from sensor import Sensor
+from PolicyNetwork import PolicyNetwork
+from ValueNetwork import ValueNetwork
 import numpy
+import torch
+
 class Car:
 
     def __init__(self,window,env):
@@ -25,6 +29,12 @@ class Car:
         self.friction = 0.05
         self.turn_speed = 2
         self.car_size = (50,100)
+
+        # Networks
+        input_size = 4*self.num_of_sensors+2
+        self.accel_policy = PolicyNetwork(input_size)
+        self.turn_policy = PolicyNetwork(input_size)
+        self.value_network = ValueNetwork(input_size)
 
         # Find and set car image
         self.car_image = pygame.image.load('car.png')
@@ -50,9 +60,12 @@ class Car:
         state = self.GetSensorData()
         state.append(self.acceleration)
         state.append(self.turn_speed)
-
-
-        trajectory = (state,action,reward)
+        state = numpy.array(state)
+        action = [self.accel_policy(torch.from_numpy(state).float())[0],self.turn_policy(torch.from_numpy(state).float())[0]]
+        #self.acceleration = action[0]
+        #self.turn_speed = action[1]
+        reward = numpy.array(self.Reward())
+        trajectory = [state,action,reward]
 
     def Move(self):
         '''

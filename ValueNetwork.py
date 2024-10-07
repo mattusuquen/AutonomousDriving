@@ -6,7 +6,6 @@ class ValueNetwork(nn.Module):
         super(ValueNetwork, self).__init__()
         dropout_rate = 0.5
 
-        self.flatten = nn.Flatten()
         self.layers = nn.Sequential(
             nn.Linear(n, n),
             nn.ReLU(),
