@@ -1,6 +1,7 @@
 import pygame
 import math
 from sensor import Sensor
+import numpy
 class Car:
 
     def __init__(self,window,env):
@@ -8,10 +9,12 @@ class Car:
         self.window = window
         self.WIDTH, self.HEIGHT = window.get_size()
 
+        # Enviornment
         self.env = env
 
-        self.sensor = Sensor(window, env)
-
+        # Sensor parameters
+        self.num_of_sensors = 50
+        self.sensor = Sensor(window, env, self.num_of_sensors)
         # Car parameters
         self.car_x, self.car_y = 0,0
         self.car_angle = 0  
@@ -29,7 +32,7 @@ class Car:
         # Rescale car image
         self.car_image = pygame.transform.scale(self.car_image, self.car_size)
 
-    def GetSensorData(self): return self.sensor.GetSensorData(self.car_size,self.car_angle)
+    def GetSensorData(self): return self.sensor.GetSensorData(self.car_size,self.car_angle,[self.car_x,self.car_y])
     def GetSensorPts(self): return self.sensor.GetSensorPts()
 
     # Set car angle
@@ -43,6 +46,13 @@ class Car:
         if self.car_angle > 180: self.car_angle -= 360
         if self.car_angle < -180: self.car_angle += 360
 
+    def Run(self):
+        state = self.GetSensorData()
+        state.append(self.acceleration)
+        state.append(self.turn_speed)
+
+
+        trajectory = (state,action,reward)
 
     def Move(self):
         '''

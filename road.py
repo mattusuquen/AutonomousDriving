@@ -128,7 +128,7 @@ class Road:
             x2, y2 = p2
             return math.sqrt((x1-x2)**2+(y1-y2)**2)
 
-        num_of_sensors = 50
+        num_of_sensors = 1
 
         data = [[0 for _ in range(num_of_sensors+2)] for _ in range(6)]
         
@@ -187,6 +187,7 @@ class Road:
         return data
 
     def RenderSensor(self,sensor_pts):
+        print('s')
         for i in range(0,len(sensor_pts)-1,2):
             p1,p2 = sensor_pts[i],sensor_pts[i+1]
             pygame.draw.line(self.window, (0,0,0), p1, p2)
@@ -218,4 +219,4 @@ class Road:
                 (self.points[i + 1][0] + self.road_width / 2, self.points[i + 1][1]),
                 (self.points[i][0] + self.road_width / 2, self.points[i][1]), 
                 width=3)
-        self.RenderSensor(self.sensor_pts)
+        #self.RenderSensor(self.sensor_pts)

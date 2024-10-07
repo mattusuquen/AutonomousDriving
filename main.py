@@ -34,7 +34,7 @@ def Start():
     for x in X: 
         f.write('\t'.join(str(i) for i in x))
         f.write('\n')
-    
+    f.close()
 #Run every frame update
 def Update():
     #Set simulation FPS
@@ -49,12 +49,13 @@ def Update():
     #print(car_angle)
     #Generate road dynamically based on car position
     road.Generate(car_pos)
-    X = road.GetSensorData(car_size,car_angle)
-    #print(X)
+    car.GetSensorData()
+    X = car.GetSensorPts()
     #Render the road and car on to the window
     road.Render()
     car.Render()
-    print(car.Reward())
+    road.RenderSensor(X)
+    #print(car.Reward())
     # Update display
     pygame.display.update()
 
