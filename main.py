@@ -37,7 +37,7 @@ def Update():
 
     #Update for car movement based on user input
     car.Run()
-    
+
     #Generate road dynamically based on car position
     car_pos = car.GetPosition()
     road.Generate(car_pos)
@@ -45,6 +45,14 @@ def Update():
     #Render the road and car on to the window
     road.Render()
     car.Render()
+
+    # Print car speed and angle
+    font = pygame.font.SysFont('Arial', 32)
+    speed_text = font.render('Speed: '+str(round(-car.GetSpeed(),2)), True, (255, 255, 255))
+    angle_text = font.render('Angle: '+str(round(car.GetAngle(),2)), True, (255, 255, 255))
+    window.blit(speed_text,(5,0))
+    window.blit(angle_text,(5,40))
+
     #road.RenderSensor(car.GetSensorPts())
     #print(car.Reward())
     # Update display

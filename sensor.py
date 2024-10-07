@@ -92,7 +92,7 @@ class Sensor:
             d = self.Distance(top_right_pt, road_point)
             y -= p*int(d*math.sin(car_angle))
             road_point =  (points[center_point+y-z*p][0] + road_width / 2, points[center_point+y-z*p][1])
-            self.sensor_pts.append((points[center_point+y-z*p][0] + road_width / 2, points[center_point+y-z*p][1]))
+            self.sensor_pts.append(road_point)
 
             #TOP LEFT SENSOR
             self.sensor_pts.append(top_left_pt)
