@@ -23,9 +23,9 @@ car = Car(window,road)
 
 #Run once at the beginning of simulation
 def Start():
-    road.Generate((0,0))    # Generate inital road points
+    road.Generate((0,0)) # Generate inital road points
     angle = road.Recenter() # Reposition road so car initialized on the road
-    car.SetRotation(angle)  # Adjust car orientation so car is facing forward
+    car.SetRotation(angle) # Adjust car orientation
 
 #Run every frame update
 def Update():
@@ -36,16 +36,17 @@ def Update():
     window.fill(BACKGROUND_COLOR)
 
     #Update for car movement based on user input
-    car.Move()  # Move car manually
-    car.Run()   # Move car within using policy network
+    car.Run()
+    
     #Generate road dynamically based on car position
     car_pos = car.GetPosition()
     road.Generate(car_pos)
 
     #Render the road and car on to the window
-    road.Render()   # Render road
-    car.Render()    # Render car
-    
+    road.Render()
+    car.Render()
+    #road.RenderSensor(car.GetSensorPts())
+    #print(car.Reward())
     # Update display
     pygame.display.update()
 

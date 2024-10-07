@@ -47,7 +47,7 @@ class Road:
 
         if not self.points: raise Exception('Road points have not been generated')
 
-        WIDTH,HEIGHT = self.window.get_size()
+        WIDTH = self.window.get_size()[0]
 
         i = len(self.points)//2
 
@@ -55,8 +55,9 @@ class Road:
         
         x1,x2 = self.points[i][0], self.points[i - 1][0]
         y1,y2 = self.points[i][1], self.points[i - 1][1]
-
+        # Calculate slope inline with current orientation
         m = (y2 - y1) / (x2 - x1)
+        # Recalculate angle
         angle = math.degrees(-math.atan(m))
 
         return angle + 90 if angle < 0 else angle - 90
@@ -79,10 +80,10 @@ class Road:
 
     
     def RenderSensor(self,sensor_pts):
-        
         '''
         Render sensors projected from the four corners of the car
         '''
+
         for i in range(0,len(sensor_pts)-1,2):
             p1,p2 = sensor_pts[i],sensor_pts[i+1]
             pygame.draw.line(self.window, (0,0,0), p1, p2)
@@ -93,8 +94,11 @@ class Road:
         Draw polygons based on the location of the points and width of the road
         '''
 
+        # Check if road has been generated
+        # If not throw error message
         if not self.points: raise Exception('Road points have not been generated')
 
+        # Render polygons for the road
         for i in range(len(self.points) - 1):
             pygame.draw.polygon(self.window, self.ROAD_COLOR, [
                 (self.points[i][0] - self.road_width / 2, self.points[i][1]),
@@ -103,6 +107,7 @@ class Road:
                 (self.points[i + 1][0] - self.road_width / 2, self.points[i + 1][1])
             ])
 
+        # Render lines for the road borders
         for i in range(len(self.points) - 1):
             pygame.draw.line(self.window, (255,255,255),
                 (self.points[i][0] - self.road_width / 2, self.points[i][1]),

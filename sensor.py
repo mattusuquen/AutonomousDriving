@@ -5,13 +5,15 @@ class Sensor:
         self.env = env          # Reference to enviornment for queries
         self.sensor_pts = []    # Store sensor points
         self.window = window
+
+        # Number of lines produced by sensor at each corner
         self.num_of_sensors = num_of_sensors
 
     # Function to rotate a point around the center by a given angle
     def rotate_point(self, point, angle):
         x, y = point
-        x_rotated = x * math.cos(angle) - y * math.sin(angle)
-        y_rotated = x * math.sin(angle) + y * math.cos(angle)
+        x_rotated = x * math.cos(angle) - y * math.sin(angle) # Recalculate new x point based on current angle
+        y_rotated = x * math.sin(angle) + y * math.cos(angle) # Recalculate new y point based on current angle
         return x_rotated, y_rotated
     
     # Return distance between two points
@@ -137,6 +139,7 @@ class Sensor:
         # Array to store sensor data
         data = []
 
+        # For each sensor line calculate the distance of line and store in data array
         for i in range(0,len(self.sensor_pts)-1,2):
             pt1,pt2 = self.sensor_pts[0],self.sensor_pts[1]
             data.append(self.Distance(pt1,pt2))
