@@ -1,12 +1,16 @@
 import pygame
 import math
-
+from sensor import Sensor
 class Car:
 
-    def __init__(self,window):
+    def __init__(self,window,env):
         # Set simulation window
         self.window = window
         self.WIDTH, self.HEIGHT = window.get_size()
+
+        self.env = env
+
+        self.sensor = Sensor(window, env)
 
         # Car parameters
         self.car_x, self.car_y = 0,0
@@ -25,6 +29,8 @@ class Car:
         # Rescale car image
         self.car_image = pygame.transform.scale(self.car_image, self.car_size)
 
+    def GetSensorData(self): return self.sensor.GetSensorData(self.car_size,self.car_angle)
+    def GetSensorPts(self): return self.sensor.GetSensorPts()
 
     # Set car angle
     def SetRotation(self, angle): self.car_angle = angle
@@ -36,6 +42,7 @@ class Car:
         
         if self.car_angle > 180: self.car_angle -= 360
         if self.car_angle < -180: self.car_angle += 360
+
 
     def Move(self):
         '''
@@ -75,6 +82,15 @@ class Car:
     def GetSize(self): return self.car_size
     
     def GetAngle(self): return self.car_angle
+    
+    def distance_from_center(self):
+        road_center = self.env.get_center_pt()
+        return self.car_x
+
+    def Reward(self): 
+        road_width = self.env.get_road_width()
+        offset = self.distance_from_center()
+        return 1 - 2 * offset / road_width if offset < road_width / 2 else 0
 
     def Render(self):
         '''

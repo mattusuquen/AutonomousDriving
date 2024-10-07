@@ -18,8 +18,8 @@ running = True
 clock = pygame.time.Clock()
 
 #Car and Road objects
-car = Car(window)
 road = Road(window)
+car = Car(window,road)
 
 #Run once at the beginning of simulation
 def Start():
@@ -54,7 +54,7 @@ def Update():
     #Render the road and car on to the window
     road.Render()
     car.Render()
-
+    print(car.Reward())
     # Update display
     pygame.display.update()
 

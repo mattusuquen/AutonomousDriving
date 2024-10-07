@@ -2,6 +2,7 @@ import random
 import pygame
 import noise
 import math
+
 class Road:
     
     def __init__(self,window):
@@ -24,6 +25,12 @@ class Road:
         self.ROAD_COLOR = (50, 50, 50)
 
         self.sensor_pts = []
+    def get_segment_height(self): return self.segment_height
+    def get_road_width(self): return self.road_width
+    def get_points(self): return self.points
+    def get_center_pt(self): 
+        _,HEIGHT = self.window.get_size()
+        return (self.points[HEIGHT // 2][0] + self.points[HEIGHT // 2][1]) / 2
 
     def Recenter(self):
         '''
@@ -179,7 +186,10 @@ class Road:
 
         return data
 
-    
+    def RenderSensor(self,sensor_pts):
+        for i in range(0,len(sensor_pts)-1,2):
+            p1,p2 = sensor_pts[i],sensor_pts[i+1]
+            pygame.draw.line(self.window, (0,0,0), p1, p2)
 
     def Render(self):
         '''
@@ -208,7 +218,4 @@ class Road:
                 (self.points[i + 1][0] + self.road_width / 2, self.points[i + 1][1]),
                 (self.points[i][0] + self.road_width / 2, self.points[i][1]), 
                 width=3)
-        
-        for i in range(0,len(self.sensor_pts)-1,2):
-            p1,p2 = self.sensor_pts[i],self.sensor_pts[i+1]
-            pygame.draw.line(self.window, (0,0,0), p1, p2)
+        self.RenderSensor(self.sensor_pts)
