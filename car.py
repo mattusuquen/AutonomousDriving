@@ -45,6 +45,15 @@ class Car:
     def GetSensorData(self): return self.sensor.GetSensorData(self.car_size,self.car_angle,[self.car_x,self.car_y])
     def GetSensorPts(self): return self.sensor.GetSensorPts()
 
+    # Return the position of the car
+    def GetPosition(self): return (self.car_x,self.car_y)
+    
+    # Return the size of the car
+    def GetSize(self): return self.car_size
+    
+    # Return car angle
+    def GetAngle(self): return self.car_angle
+
     # Set car angle
     def SetRotation(self, angle): self.car_angle = angle
     
@@ -55,8 +64,36 @@ class Car:
         
         if self.car_angle > 180: self.car_angle -= 360
         if self.car_angle < -180: self.car_angle += 360
+    
+    def distance_from_center(self):
+        road_center = self.env.get_center_pt()
+        return self.car_x
 
+    # Reward function
+    def Reward(self): 
+        road_width = self.env.get_road_width()
+        offset = self.distance_from_center()
+        return 1 - 2 * offset / road_width if offset < road_width / 2 else 0
+
+    def Render(self):
+        '''
+        Render car on to window
+        '''
+
+        car_width,car_height = self.car_size
+
+        # Rotate image based on angle
+        rotated_image = pygame.transform.rotate(self.car_image, self.car_angle)
+        new_rect = rotated_image.get_rect(center=self.car_image.get_rect(topleft=(self.WIDTH // 2-(car_width // 2), self.HEIGHT // 2-(car_height // 2))).center)
+
+        # Display image onto rectangle
+        self.window.blit(rotated_image, new_rect.topleft)
+    
     def Run(self):
+        '''
+        Handle car movement via output of the policy network
+        Store trajectory data for training
+        '''
         state = self.GetSensorData()
         state.append(self.acceleration)
         state.append(self.turn_speed)
@@ -98,33 +135,3 @@ class Car:
         # Update car position
         self.car_x -= self.car_speed * math.sin(math.radians(self.car_angle))
         self.car_y += self.car_speed * math.cos(math.radians(self.car_angle))
-    
-    # Return the position of the car
-    def GetPosition(self): return (self.car_x,self.car_y)
-    
-    def GetSize(self): return self.car_size
-    
-    def GetAngle(self): return self.car_angle
-    
-    def distance_from_center(self):
-        road_center = self.env.get_center_pt()
-        return self.car_x
-
-    def Reward(self): 
-        road_width = self.env.get_road_width()
-        offset = self.distance_from_center()
-        return 1 - 2 * offset / road_width if offset < road_width / 2 else 0
-
-    def Render(self):
-        '''
-        Render car on to window
-        '''
-
-        car_width,car_height = self.car_size
-
-        # Rotate image based on angle
-        rotated_image = pygame.transform.rotate(self.car_image, self.car_angle)
-        new_rect = rotated_image.get_rect(center=self.car_image.get_rect(topleft=(self.WIDTH // 2-(car_width // 2), self.HEIGHT // 2-(car_height // 2))).center)
-
-        # Display image onto rectangle
-        self.window.blit(rotated_image, new_rect.topleft)
