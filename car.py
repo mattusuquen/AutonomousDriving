@@ -6,6 +6,7 @@ from ValueNetwork import ValueNetwork
 import numpy
 import torch
 import os
+import pandas as pd
 
 class Car:
 
@@ -45,6 +46,14 @@ class Car:
 
         # Rescale car image
         self.car_image = pygame.transform.scale(self.car_image, self.car_size)
+
+        # Dataframe
+        self.columns = ['state_'+str(i) for i in range(self.num_of_sensors*4+2)]
+        print(len(self.columns))
+        self.columns.append('action_1')
+        self.columns.append('action_2')
+        self.columns.append('reward')
+        self.trajectories = pd.DataFrame(columns=self.columns)
 
     def GetNetworks(self): return self.accel_policy, self.turn_policy, self.value_network
 
@@ -122,13 +131,19 @@ class Car:
         self.turn_speed = action[1].detach().numpy()     # Set turn speed to network output
         
         # Calculate and store award at given state
-        reward = numpy.array(self.Reward())
+        reward = self.Reward()
         
         # Move car based on accerlation and turn_speed
         self.Move()
 
-        # Store state, action, reward
-        trajectory = [state,action,reward]
+        # Store trajectory (state, action, reward)
+        trajectory = state.tolist()
+        trajectory.append(self.acceleration)
+        trajectory.append(self.turn_speed)
+        trajectory.append(reward)
+        trajectory = pd.DataFrame([trajectory],columns=self.columns)
+        self.trajectories = pd.concat([self.trajectories,trajectory],ignore_index=True)
+        self.trajectories.to_csv('trajectories.csv')
 
     def Move(self):
         '''
