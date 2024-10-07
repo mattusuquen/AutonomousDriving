@@ -5,6 +5,7 @@ from PolicyNetwork import PolicyNetwork
 from ValueNetwork import ValueNetwork
 import numpy
 import torch
+import os
 
 class Car:
 
@@ -35,12 +36,17 @@ class Car:
         self.accel_policy = PolicyNetwork(input_size)
         self.turn_policy = PolicyNetwork(input_size)
         self.value_network = ValueNetwork(input_size)
+        if os.path.exists("acceleration_network.pth"): self.accel_policy.load_state_dict(torch.load("acceleration_network.pth"))
+        if os.path.exists("turn_network.pth"): self.turn_policy.load_state_dict(torch.load("turn_network.pth"))
+        if os.path.exists("value_network.pth"): self.value_network.load_state_dict(torch.load("value_network.pth"))
 
         # Find and set car image
         self.car_image = pygame.image.load('car.png')
 
         # Rescale car image
         self.car_image = pygame.transform.scale(self.car_image, self.car_size)
+
+    def GetNetworks(self): return self.accel_policy, self.turn_policy, self.value_network
 
     # Return data from sensors
     def GetSensorData(self): return self.sensor.GetSensorData(self.car_size,self.car_angle,[self.car_x,self.car_y])

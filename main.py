@@ -2,6 +2,7 @@ import pygame
 from car import Car
 from road import Road
 import math
+import torch
 #Initialize Pygame
 pygame.init()
 
@@ -67,10 +68,13 @@ if __name__ == "__main__":
     while running:
         # Stop main loop when user closes window
         for event in pygame.event.get():
+            acceleration_network, turn_network, value_network = car.GetNetworks()
+            torch.save(acceleration_network.state_dict(), 'acceleration_network.pth')
+            torch.save(turn_network.state_dict(), 'turn_network.pth')
+            torch.save(value_network.state_dict(), 'value_network.pth')
             if event.type == pygame.QUIT: running = False
 
         # Otherwise, update the window accordingly
         Update()
-
     # Quit pygame when simulation is ended
     pygame.quit()
