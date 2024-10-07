@@ -3,11 +3,11 @@ import torch.nn as nn
 
 class PolicyNetwork(nn.Module):
     def __init__(self, n):
-        super().__init__()
-        dropout_rate = 0.5
+        super(PolicyNetwork,self).__init__()
+        dropout_rate = 0.6
 
         self.flatten = nn.Flatten()
-        self.policy_layers = nn.Sequential(
+        self.layers = nn.Sequential(
             nn.Linear(n, n * 2),
             nn.ReLU(),
             nn.LayerNorm(n * 2), 
@@ -21,6 +21,5 @@ class PolicyNetwork(nn.Module):
         )
 
     def forward(self, x):
-        x = self.flatten(x)
-        logits = self.policy_layers(x)
+        logits = self.layers(x)
         return logits
