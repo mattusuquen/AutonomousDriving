@@ -36,7 +36,7 @@ class Road:
 
     def get_center_pt(self): 
         _,HEIGHT = self.window.get_size()
-        return (self.points[HEIGHT // 2][0] + self.points[HEIGHT // 2][1]) / 2
+        return (self.points[HEIGHT // 2][0] + self.points[HEIGHT // 2+1][0]) / 2
 
     def Recenter(self):
         '''

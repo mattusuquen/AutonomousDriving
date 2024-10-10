@@ -49,10 +49,7 @@ class Car:
 
         # Dataframe
         self.columns = ['state_'+str(i) for i in range(self.num_of_sensors*4+2)]
-        print(len(self.columns))
-        self.columns.append('action_1')
-        self.columns.append('action_2')
-        self.columns.append('reward')
+        self.columns += ['action_1','action_2','reward']
         self.trajectories = pd.DataFrame(columns=self.columns)
 
     def GetNetworks(self): return self.accel_policy, self.turn_policy, self.value_network
@@ -86,14 +83,15 @@ class Car:
         if self.car_angle < -180: self.car_angle += 360
     
     def distance_from_center(self):
-        road_center = self.env.get_center_pt()
-        return self.car_x
+        road_center = self.env.get_center_pt()-self.WIDTH/2
+        return abs(road_center)
 
     # Reward function
     def Reward(self):
-        road_width = self.env.get_road_width()
+        min_reward = 0.0001
         offset = self.distance_from_center()
-        return 1 - 2 * offset / road_width if offset < road_width / 2 else 0
+        road_width = self.env.get_road_width()/2
+        return (1-min_reward)*((road_width-offset)/road_width)+min_reward if offset < road_width else min_reward
 
     def Render(self):
         '''
