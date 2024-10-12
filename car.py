@@ -50,7 +50,8 @@ class Car:
         self.trajectories_path = 'data/trajectories.csv'
 
         # Find and set car image
-        self.car_image = pygame.image.load('car.png')
+        car_img_path = 'images/car.png'
+        self.car_image = pygame.image.load(car_img_path)
 
         # Rescale car image
         self.car_image = pygame.transform.scale(self.car_image, self.car_size)
