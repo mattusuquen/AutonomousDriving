@@ -14,7 +14,7 @@ class ValueNetwork(nn.Module):
             nn.Linear(n, n),
             nn.ReLU(),
             nn.Dropout(dropout_rate), 
-            nn.Linear(n, 2),
+            nn.Linear(n, 1),
         )
 
     def forward(self, x):
