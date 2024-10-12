@@ -3,7 +3,7 @@ import math
 from sensor import Sensor
 from PolicyNetwork import PolicyNetwork
 from ValueNetwork import ValueNetwork
-import numpy
+import numpy as np
 import torch
 import os
 import pandas as pd
@@ -37,9 +37,17 @@ class Car:
         self.accel_policy = PolicyNetwork(input_size)
         self.turn_policy = PolicyNetwork(input_size)
         self.value_network = ValueNetwork(input_size)
-        if os.path.exists("acceleration_network.pth"): self.accel_policy.load_state_dict(torch.load("acceleration_network.pth"))
-        if os.path.exists("turn_network.pth"): self.turn_policy.load_state_dict(torch.load("turn_network.pth"))
-        if os.path.exists("value_network.pth"): self.value_network.load_state_dict(torch.load("value_network.pth"))
+
+        # Load networks if exists
+        acceleration_path = 'models/acceleration_network.pth'
+        turn_path = 'models/turn_network.pth'
+        value_path = 'models/value_network.pth'
+        if os.path.exists(acceleration_path): self.accel_policy.load_state_dict(torch.load(acceleration_path))
+        if os.path.exists(turn_path): self.turn_policy.load_state_dict(torch.load(turn_path))
+        if os.path.exists(value_path): self.value_network.load_state_dict(torch.load(value_path))
+
+        # Data .csv location
+        self.trajectories_path = 'data/trajectories.csv'
 
         # Find and set car image
         self.car_image = pygame.image.load('car.png')
@@ -73,15 +81,16 @@ class Car:
     # Set car angle
     def SetRotation(self, angle): self.car_angle = angle
     
-    def ClipRotation(self):
+    def ClampRotation(self):
         '''
         Ensure car angle range stays within (-180,180)
         '''
-        
-        if self.car_angle > 180: self.car_angle -= 360
-        if self.car_angle < -180: self.car_angle += 360
+        self.car_angle = (self.car_angle + 180) % 360 - 180
     
     def distance_from_center(self):
+        '''
+        return the number of pixels the far center is to the road center
+        '''
         road_center = self.env.get_center_pt()-self.WIDTH/2
         return abs(road_center)
 
@@ -118,19 +127,22 @@ class Car:
         state.append(self.acceleration)
         state.append(self.turn_speed)
         
-        state = numpy.array(state)              # Convert state to numpy array
-        state = torch.from_numpy(state).float() # Convert state to tensor
+        state = np.array(state)              # Convert state to numpy array
+        state_tensor = torch.from_numpy(state).float() # Convert state to tensor
 
-        # Find action based on current policy
-        action = [self.accel_policy(state)[0],self.turn_policy(state)[0]]
+        # Find mean and standard deviation based on current policy
+        accel_mean, accel_stdev = self.accel_policy(state_tensor)
+        turn_mean, turn_stdev = self.turn_policy(state_tensor)
 
-        self.acceleration = action[0].detach().numpy()   # Set acceleration to network output
-        self.turn_speed = action[1].detach().numpy()     # Set turn speed to network output
+        # Update acceleration and turn speed
+        self.acceleration = np.random.normal(accel_mean, accel_stdev) # Get acceleration based on normal distribution
+        self.turn_speed = np.random.normal(turn_mean, turn_stdev)     # Get turn speed based on normal distribution
         
         # Calculate and store award at given state
         reward = self.Reward()
         
         # Move car based on accerlation and turn_speed
+        # Updating the state space
         self.Move()
 
         # Store trajectory (state, action, reward)
@@ -140,16 +152,19 @@ class Car:
         trajectory.append(reward)
         trajectory = pd.DataFrame([trajectory],columns=self.columns)
         self.trajectories = pd.concat([self.trajectories,trajectory],ignore_index=True)
-        self.trajectories.to_csv('trajectories.csv')
+        self.trajectories.to_csv(self.trajectories_path)
 
     def Move(self):
         '''
         Update car location based on acceleration and turn speed
         '''
+
+        # Update angle and speed
         self.car_angle += self.turn_speed
         self.car_speed -= self.acceleration
-        # Clip car angle to (-180,180)
-        self.ClipRotation()
+
+        # Clamp car angle to (-180,180)
+        self.ClampRotation()
 
         # Limit speed
         if self.car_speed > self.max_speed: self.car_speed = self.max_speed

@@ -22,6 +22,11 @@ clock = pygame.time.Clock()
 road = Road(window)
 car = Car(window,road)
 
+# Network locations
+acceleration_path = 'models/acceleration_network.pth'
+turn_path = 'models/turn_network.pth'
+value_path = 'models/value_network.pth'
+
 #Run once at the beginning of simulation
 def Start():
     road.Generate((0,0)) # Generate inital road points
@@ -69,12 +74,15 @@ if __name__ == "__main__":
         # Stop main loop when user closes window
         for event in pygame.event.get():
             acceleration_network, turn_network, value_network = car.GetNetworks()
-            torch.save(acceleration_network.state_dict(), 'acceleration_network.pth')
-            torch.save(turn_network.state_dict(), 'turn_network.pth')
-            torch.save(value_network.state_dict(), 'value_network.pth')
             if event.type == pygame.QUIT: running = False
 
         # Otherwise, update the window accordingly
         Update()
+
+        # Save models
+        torch.save(acceleration_network.state_dict(), acceleration_path)
+        torch.save(turn_network.state_dict(), turn_path)
+        torch.save(value_network.state_dict(), value_path)
+
     # Quit pygame when simulation is ended
     pygame.quit()

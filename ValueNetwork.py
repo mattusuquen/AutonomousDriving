@@ -2,17 +2,16 @@ import torch
 import torch.nn as nn
 
 class ValueNetwork(nn.Module):
-    def __init__(self, n):
+    def __init__(self, n, dropout_rate=0.5):
         super(ValueNetwork, self).__init__()
-        dropout_rate = 0.5
 
         self.layers = nn.Sequential(
             nn.Linear(n, n),
-            nn.ReLU(),
+            nn.Tanh(),
             nn.LayerNorm(n), 
             nn.Dropout(dropout_rate),
             nn.Linear(n, n),
-            nn.ReLU(),
+            nn.Tanh(),
             nn.Dropout(dropout_rate), 
             nn.Linear(n, 1),
         )
