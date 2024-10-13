@@ -132,8 +132,8 @@ class Car:
         state_tensor = torch.from_numpy(state).float() # Convert state to tensor
 
         # Find mean and standard deviation based on current policy
-        accel_mean, accel_stdev = self.accel_policy(state_tensor)
-        turn_mean, turn_stdev = self.turn_policy(state_tensor)
+        accel_mean, accel_stdev = self.accel_policy(state_tensor).detach().numpy()
+        turn_mean, turn_stdev = self.turn_policy(state_tensor).detach().numpy()
 
         # Update acceleration and turn speed
         self.acceleration = np.random.normal(accel_mean, accel_stdev) # Get acceleration based on normal distribution
