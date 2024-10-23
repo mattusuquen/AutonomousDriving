@@ -51,7 +51,7 @@ class Road:
 
         i = len(self.points)//2
 
-        self.alignment = WIDTH//2-self.points[i][0]
+        self.alignment = WIDTH//2-self.get_center_pt()
         
         x1,x2 = self.points[i][0], self.points[i - 1][0]
         y1,y2 = self.points[i][1], self.points[i - 1][1]

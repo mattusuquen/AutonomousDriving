@@ -30,8 +30,7 @@ value_path = 'models/value_network.pth'
 #Run once at the beginning of simulation
 def Start():
     road.Generate((0,0)) # Generate inital road points
-    angle = road.Recenter() # Reposition road so car initialized on the road
-    car.SetRotation(angle) # Adjust car orientation
+    car.Reset()
 
 #Run every frame update
 def Update():

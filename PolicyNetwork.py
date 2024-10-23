@@ -20,5 +20,5 @@ class PolicyNetwork(nn.Module):
 
     def forward(self, x):
         logits = self.layers(x)
-        logits[1] = nn.ReLU()(logits[1])
+        logits[:,1] = nn.ReLU()(logits[:,1])+1e-6
         return logits

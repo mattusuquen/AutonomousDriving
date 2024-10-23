@@ -46,6 +46,9 @@ class Car:
         if os.path.exists(turn_path): self.turn_policy.load_state_dict(torch.load(turn_path))
         if os.path.exists(value_path): self.value_network.load_state_dict(torch.load(value_path))
 
+        self.resetTimer = 0
+        self.resetTimeLimit = 100
+
         # Data .csv location
         self.trajectories_path = 'data/trajectories.csv'
 
@@ -82,6 +85,13 @@ class Car:
     # Set car angle
     def SetRotation(self, angle): self.car_angle = angle
     
+    def Reset(self):
+        car_x = 0
+        car_y = 0
+        angle = self.env.Recenter() # Reposition road so car initialized on the road
+        self.SetRotation(angle) # Adjust car orientation
+        self.resetTimer = 0
+
     def ClampRotation(self):
         '''
         Ensure car angle range stays within (-180,180)
@@ -128,12 +138,12 @@ class Car:
         state.append(self.acceleration)
         state.append(self.turn_speed)
         
-        state = np.array(state)              # Convert state to numpy array
-        state_tensor = torch.from_numpy(state).float() # Convert state to tensor
+        state_array = np.array([state])                # Convert state to numpy array
+        state_tensor = torch.from_numpy(state_array).float() # Convert state to tensor
 
         # Find mean and standard deviation based on current policy
-        accel_mean, accel_stdev = self.accel_policy(state_tensor).detach().numpy()
-        turn_mean, turn_stdev = self.turn_policy(state_tensor).detach().numpy()
+        accel_mean, accel_stdev = self.accel_policy(state_tensor).detach().numpy()[0]
+        turn_mean, turn_stdev = self.turn_policy(state_tensor).detach().numpy()[0]
 
         # Update acceleration and turn speed
         self.acceleration = np.random.normal(accel_mean, accel_stdev) # Get acceleration based on normal distribution
@@ -147,10 +157,7 @@ class Car:
         self.Move()
 
         # Store trajectory (state, action, reward)
-        trajectory = state.tolist()
-        trajectory.append(self.acceleration)
-        trajectory.append(self.turn_speed)
-        trajectory.append(reward)
+        trajectory = state+[self.acceleration]+[self.turn_speed]+[reward]
         trajectory = pd.DataFrame([trajectory],columns=self.columns)
         self.trajectories = pd.concat([self.trajectories,trajectory],ignore_index=True)
         self.trajectories.to_csv(self.trajectories_path)
@@ -196,18 +203,4 @@ class Car:
         if (keys[pygame.K_DOWN] or keys[pygame.K_UP]) and keys[pygame.K_LEFT]: self.car_angle += self.turn_speed
         if (keys[pygame.K_DOWN] or keys[pygame.K_UP]) and keys[pygame.K_RIGHT]: self.car_angle -= self.turn_speed
         
-        # Clip car angle to (-180,180)
-        self.ClipRotation()
-
-        # Limit speed
-        if self.car_speed > self.max_speed: self.car_speed = self.max_speed
-        if self.car_speed < -self.max_speed // 2: self.car_speed = -self.max_speed // 2
-
-        # Apply friction to slow the car down when no keys are pressed
-        if self.car_speed > 0: self.car_speed -= self.friction
-        elif self.car_speed < 0: self.car_speed += self.friction
-        if abs(self.car_speed) < self.friction: self.car_speed = 0  
-
-        # Update car position
-        self.car_x -= self.car_speed * math.sin(math.radians(self.car_angle))
-        self.car_y += self.car_speed * math.cos(math.radians(self.car_angle))
+        self.Move()
