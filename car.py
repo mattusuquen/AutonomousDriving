@@ -51,6 +51,9 @@ class Car:
 
         # Data .csv location
         self.trajectories_path = 'data/trajectories.csv'
+        # Dataframe
+        self.columns = ['state_'+str(i+1) for i in range(self.num_of_sensors*4+2)] + ['action_1','action_2','reward']
+        self.trajectories = []
 
         # Find and set car image
         car_img_path = 'images/car.png'
@@ -59,9 +62,6 @@ class Car:
         # Rescale car image
         self.car_image = pygame.transform.scale(self.car_image, self.car_size)
 
-        # Dataframe
-        self.columns = ['state_'+str(i+1) for i in range(self.num_of_sensors*4+2)] + ['action_1','action_2','reward']
-        self.trajectories = pd.DataFrame(columns=self.columns)
 
     def GetNetworks(self): return self.accel_policy, self.turn_policy, self.value_network
 
@@ -158,9 +158,18 @@ class Car:
 
         # Store trajectory (state, action, reward)
         trajectory = state+[self.acceleration]+[self.turn_speed]+[reward]
-        trajectory = pd.DataFrame([trajectory],columns=self.columns)
-        self.trajectories = pd.concat([self.trajectories,trajectory],ignore_index=True)
-        self.trajectories.to_csv(self.trajectories_path)
+        self.StoreTrajectory(trajectory)
+        
+        # Simulation reset scheduling
+        if self.resetTimer >= self.resetTimeLimit: self.Reset()
+        else: self.resetTimer += 1
+
+    def StoreTrajectory(self,trajectory): self.trajectories.append(trajectory)
+
+    def SaveData(self):
+        dataframe = pd.DataFrame(self.trajectories,columns=self.columns)
+        dataframe.to_csv(self.trajectories_path)
+
 
     def Move(self):
         '''

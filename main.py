@@ -27,6 +27,14 @@ acceleration_path = 'models/acceleration_network.pth'
 turn_path = 'models/turn_network.pth'
 value_path = 'models/value_network.pth'
 
+def RenderSpeedometer():
+    font = pygame.font.SysFont('Arial', 32)
+    speed_text = font.render('Speed: '+str(round(-car.GetSpeed(),2)), True, (255, 255, 255))
+    angle_text = font.render('Angle: '+str(round(car.GetAngle(),2)), True, (255, 255, 255))
+    window.blit(speed_text,(5,0))
+    window.blit(angle_text,(5,40))
+
+
 #Run once at the beginning of simulation
 def Start():
     road.Generate((0,0)) # Generate inital road points
@@ -52,11 +60,7 @@ def Update():
     car.Render()
 
     # Print car speed and angle
-    font = pygame.font.SysFont('Arial', 32)
-    speed_text = font.render('Speed: '+str(round(-car.GetSpeed(),2)), True, (255, 255, 255))
-    angle_text = font.render('Angle: '+str(round(car.GetAngle(),2)), True, (255, 255, 255))
-    window.blit(speed_text,(5,0))
-    window.blit(angle_text,(5,40))
+    RenderSpeedometer()
 
     #road.RenderSensor(car.GetSensorPts())
     #print(car.Reward())
@@ -78,10 +82,13 @@ if __name__ == "__main__":
         # Otherwise, update the window accordingly
         Update()
 
-        # Save models
-        torch.save(acceleration_network.state_dict(), acceleration_path)
-        torch.save(turn_network.state_dict(), turn_path)
-        torch.save(value_network.state_dict(), value_path)
+    # Save models
+    torch.save(acceleration_network.state_dict(), acceleration_path)
+    torch.save(turn_network.state_dict(), turn_path)
+    torch.save(value_network.state_dict(), value_path)
+
+    # Save trajectory data
+    car.SaveData()
 
     # Quit pygame when simulation is ended
     pygame.quit()
