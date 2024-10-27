@@ -63,7 +63,11 @@ class Car:
         # Rescale car image
         self.car_image = pygame.transform.scale(self.car_image, self.car_size)
 
+<<<<<<< HEAD
     def simulation_count(self): return len(self.trajectories)//self.resetTimeLimit
+=======
+
+>>>>>>> 8b84eab937deecec6fc53e0e922f3612d8bfd2df
     def GetNetworks(self): return self.accel_policy, self.turn_policy, self.value_network
 
     # Return data from sensors
@@ -182,6 +186,7 @@ class Car:
         if self.resetTimer >= self.resetTimeLimit: self.Reset()
         else: self.resetTimer += 1
 
+<<<<<<< HEAD
     def StoreTrajectory(self,trajectory): 
         if self.sensor.off_road: # If car off road end simulation
             self.trajectories += [trajectory]*(self.resetTimeLimit-self.resetTimer)
@@ -193,6 +198,11 @@ class Car:
         Save trajectory data in a data frame
         Save data frame in csv file
         '''
+=======
+    def StoreTrajectory(self,trajectory): self.trajectories.append(trajectory)
+
+    def SaveData(self):
+>>>>>>> 8b84eab937deecec6fc53e0e922f3612d8bfd2df
         dataframe = pd.DataFrame(self.trajectories,columns=self.columns)
         dataframe.to_csv(self.trajectories_path)
 

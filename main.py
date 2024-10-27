@@ -27,14 +27,20 @@ acceleration_path = 'models/acceleration_network.pth'
 turn_path = 'models/turn_network.pth'
 value_path = 'models/value_network.pth'
 
+<<<<<<< HEAD
 font = pygame.font.SysFont('Arial', 32)
 
 def RenderSpeedometer():
+=======
+def RenderSpeedometer():
+    font = pygame.font.SysFont('Arial', 32)
+>>>>>>> 8b84eab937deecec6fc53e0e922f3612d8bfd2df
     speed_text = font.render('Speed: '+str(round(-car.GetSpeed(),2)), True, (255, 255, 255))
     angle_text = font.render('Angle: '+str(round(car.GetAngle(),2)), True, (255, 255, 255))
     window.blit(speed_text,(5,0))
     window.blit(angle_text,(5,40))
 
+<<<<<<< HEAD
 def RenderSimulationCount():
     count_text = font.render('Simulation: '+str(car.simulation_count())+'/1000', True, (255, 255, 255))
     window.blit(count_text,(5,80))
@@ -58,6 +64,8 @@ def Save():
 
     # Save trajectory data
     car.SaveData()
+=======
+>>>>>>> 8b84eab937deecec6fc53e0e922f3612d8bfd2df
 
 #Run once at the beginning of simulation
 def Start(): car.Reset()
@@ -78,8 +86,19 @@ def Update():
     road.Generate(car_pos)
 
     #Render the road and car on to the window
+<<<<<<< HEAD
     Render()
     
+=======
+    road.Render()
+    car.Render()
+
+    # Print car speed and angle
+    RenderSpeedometer()
+
+    #road.RenderSensor(car.GetSensorPts())
+    #print(car.Reward())
+>>>>>>> 8b84eab937deecec6fc53e0e922f3612d8bfd2df
     # Update display
     pygame.display.update()
 
@@ -100,8 +119,18 @@ if __name__ == "__main__":
         # Otherwise, update the window accordingly
         Update()
 
+<<<<<<< HEAD
     # On quit, save simulation data
     Save()
+=======
+    # Save models
+    torch.save(acceleration_network.state_dict(), acceleration_path)
+    torch.save(turn_network.state_dict(), turn_path)
+    torch.save(value_network.state_dict(), value_path)
+
+    # Save trajectory data
+    car.SaveData()
+>>>>>>> 8b84eab937deecec6fc53e0e922f3612d8bfd2df
 
     # Quit pygame when simulation is ended
     pygame.quit()
