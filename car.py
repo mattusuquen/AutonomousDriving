@@ -7,6 +7,7 @@ import numpy as np
 import torch
 import os
 import pandas as pd
+import random
 
 class Car:
 
@@ -34,8 +35,8 @@ class Car:
 
         # Networks
         input_size = 4*self.num_of_sensors+2
-        self.accel_policy = PolicyNetwork(input_size)
-        self.turn_policy = PolicyNetwork(input_size)
+        self.accel_policy = PolicyNetwork(input_size,mean_range=1,stdev_coeff=0.1)
+        self.turn_policy = PolicyNetwork(input_size,mean_range=1,stdev_coeff=0.1)
         self.value_network = ValueNetwork(input_size)
 
         # Load networks if exists
@@ -51,6 +52,9 @@ class Car:
 
         # Data .csv location
         self.trajectories_path = 'data/trajectories.csv'
+        # Dataframe
+        self.columns = ['state_'+str(i+1) for i in range(self.num_of_sensors*4+2)] + ['action_1','action_2','reward']
+        self.trajectories = []
 
         # Find and set car image
         car_img_path = 'images/car.png'
@@ -59,10 +63,7 @@ class Car:
         # Rescale car image
         self.car_image = pygame.transform.scale(self.car_image, self.car_size)
 
-        # Dataframe
-        self.columns = ['state_'+str(i+1) for i in range(self.num_of_sensors*4+2)] + ['action_1','action_2','reward']
-        self.trajectories = pd.DataFrame(columns=self.columns)
-
+    def simulation_count(self): return len(self.trajectories)//self.resetTimeLimit
     def GetNetworks(self): return self.accel_policy, self.turn_policy, self.value_network
 
     # Return data from sensors
@@ -86,8 +87,9 @@ class Car:
     def SetRotation(self, angle): self.car_angle = angle
     
     def Reset(self):
-        car_x = 0
-        car_y = 0
+        self.car_x = 0
+        self.car_y = 0
+        self.env.Generate((0,0),seed=random.uniform(0,1))
         angle = self.env.Recenter() # Reposition road so car initialized on the road
         self.SetRotation(angle) # Adjust car orientation
         self.resetTimer = 0
@@ -105,18 +107,31 @@ class Car:
         road_center = self.env.get_center_pt()-self.WIDTH/2
         return abs(road_center)
 
-    # Reward function
+    
     def Reward(self):
-        min_reward = 0.0001
+        '''
+        Reward function
+        '''
+        # Minimum possible reward
+        min_reward = 1e-6
+
+        # Road attributes
         offset = self.distance_from_center()
         road_width = self.env.get_road_width()/2
-        return (1-min_reward)*((road_width-offset)/road_width)+min_reward if offset < road_width else min_reward
+
+        # Distance travelled
+        dist_from_start = math.sqrt((self.car_x)**2 + (self.car_y)**2)
+
+        # Return calculated reward
+        if offset < road_width: return (1 - min_reward) * ((road_width - offset) / road_width) + min_reward + dist_from_start
+        if self.car_speed < 1: return min_reward
+        return min_reward
 
     def Render(self):
         '''
         Render car on to window
         '''
-
+        # Car size
         car_width,car_height = self.car_size
 
         # Rotate image based on angle
@@ -131,14 +146,17 @@ class Car:
         Handle car movement via output of the policy network
         Store trajectory data for training
         '''
+
         state = []
+
         # Read data from sensor
         state = self.GetSensorData()
+
         # Add acceleration and turn_speed to current state
         state.append(self.acceleration)
         state.append(self.turn_speed)
         
-        state_array = np.array([state])                # Convert state to numpy array
+        state_array = np.array([state])                      # Convert state to numpy array
         state_tensor = torch.from_numpy(state_array).float() # Convert state to tensor
 
         # Find mean and standard deviation based on current policy
@@ -158,30 +176,45 @@ class Car:
 
         # Store trajectory (state, action, reward)
         trajectory = state+[self.acceleration]+[self.turn_speed]+[reward]
-        trajectory = pd.DataFrame([trajectory],columns=self.columns)
-        self.trajectories = pd.concat([self.trajectories,trajectory],ignore_index=True)
-        self.trajectories.to_csv(self.trajectories_path)
+        self.StoreTrajectory(trajectory)
+        
+        # Simulation reset scheduling
+        if self.resetTimer >= self.resetTimeLimit: self.Reset()
+        else: self.resetTimer += 1
+
+    def StoreTrajectory(self,trajectory): 
+        if self.sensor.off_road: # If car off road end simulation
+            self.trajectories += [trajectory]*(self.resetTimeLimit-self.resetTimer)
+            self.resetTimer = self.resetTimeLimit
+        else: self.trajectories.append(trajectory)
+
+    def SaveData(self):
+        '''
+        Save trajectory data in a data frame
+        Save data frame in csv file
+        '''
+        dataframe = pd.DataFrame(self.trajectories,columns=self.columns)
+        dataframe.to_csv(self.trajectories_path)
+
 
     def Move(self):
         '''
         Update car location based on acceleration and turn speed
         '''
-
+        if self.sensor.off_road: 
+            self.car_speed = 0
+            return
         # Update angle and speed
-        self.car_angle += self.turn_speed
+        if self.car_speed != 0: self.car_angle += self.turn_speed
         self.car_speed -= self.acceleration
 
         # Clamp car angle to (-180,180)
         self.ClampRotation()
 
-        # Limit speed
-        if self.car_speed > self.max_speed: self.car_speed = self.max_speed
-        if self.car_speed < -self.max_speed // 2: self.car_speed = -self.max_speed // 2
-
         # Apply friction to slow the car down when no keys are pressed
         if self.car_speed > 0: self.car_speed -= self.friction
         elif self.car_speed < 0: self.car_speed += self.friction
-        if abs(self.car_speed) < self.friction: self.car_speed = 0  
+        if abs(self.car_speed) < self.friction: self.car_speed = 0
 
         # Update car position
         self.car_x -= self.car_speed * math.sin(math.radians(self.car_angle))

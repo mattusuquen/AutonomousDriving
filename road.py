@@ -48,10 +48,10 @@ class Road:
         if not self.points: raise Exception('Road points have not been generated')
 
         WIDTH = self.window.get_size()[0]
-
         i = len(self.points)//2
-
-        self.alignment = WIDTH//2-self.get_center_pt()
+        self.alignment = 0
+        self.Generate((0,0))
+        self.alignment = WIDTH//2 - self.points[i][0]
         
         x1,x2 = self.points[i][0], self.points[i - 1][0]
         y1,y2 = self.points[i][1], self.points[i - 1][1]
@@ -62,10 +62,11 @@ class Road:
 
         return angle + 90 if angle < 0 else angle - 90
     
-    def Generate(self,offset):
+    def Generate(self,offset,seed=-1):
         '''
         Generate road points based on the car's position
         '''
+        if seed != -1: self.seed = seed
         WIDTH,HEIGHT = self.window.get_size()
 
         offset_x,offset_y = offset
@@ -83,7 +84,6 @@ class Road:
         '''
         Render sensors projected from the four corners of the car
         '''
-
         for i in range(0,len(sensor_pts)-1,2):
             p1,p2 = sensor_pts[i],sensor_pts[i+1]
             pygame.draw.line(self.window, (0,0,0), p1, p2)

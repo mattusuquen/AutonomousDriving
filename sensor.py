@@ -1,11 +1,12 @@
 import math
+import numpy as np
 from road import Road
 class Sensor:
     def __init__(self, window, env, num_of_sensors):
         self.env = env          # Reference to enviornment for queries
         self.sensor_pts = []    # Store sensor points
         self.window = window
-
+        self.off_road = False
         # Number of lines produced by sensor at each corner
         self.num_of_sensors = num_of_sensors
 
@@ -86,47 +87,58 @@ class Sensor:
         for z in range(self.num_of_sensors):
             #TOP RIGHT SENSOR
             self.sensor_pts.append(top_right_pt)
-            y = top_right_pt[1] - car_center_y
+            x,y = top_right_pt
+            y -= car_center_y
             y = int(round(y/segment_height))
-            road_point = (points[center_point+y][0] + road_width / 2, points[center_point+y][1])
-            d = self.Distance(top_right_pt, road_point)
-            y -= p*int(d*math.sin(car_angle))
-            road_point =  (points[center_point+y-z*p][0] + road_width / 2, points[center_point+y-z*p][1])
-            self.sensor_pts.append(road_point)
+            if points[center_point+y][0] - road_width / 2 > x or x > points[center_point+y][0] + road_width / 2: self.sensor_pts.append(top_right_pt)
+            else:
+                road_point = (points[center_point+y][0] + road_width / 2, points[center_point+y][1])
+                d = self.Distance(top_right_pt, road_point)
+                y -= p*int(d*math.sin(car_angle))
+                road_point =  (points[center_point+y-z*p][0] + road_width / 2, points[center_point+y-z*p][1])
+                self.sensor_pts.append(road_point)
 
             #TOP LEFT SENSOR
             self.sensor_pts.append(top_left_pt)
-            _,y = top_left_pt
+            x,y = top_left_pt
             y -= car_center_y
             y = int(round(y/segment_height))
-            road_point = (points[center_point+y][0] - road_width / 2, points[center_point+y][1])
-            d = self.Distance(top_left_pt, road_point)
-            y += p*int(d*math.sin(car_angle))
-            road_point = (points[center_point+y-z*p][0] - road_width / 2, points[center_point+y-z*p][1])
-            self.sensor_pts.append(road_point)
+            if points[center_point+y][0] - road_width / 2 > x or x > points[center_point+y][0] + road_width / 2: self.sensor_pts.append(top_left_pt)
+            else:
+                road_point = (points[center_point+y][0] - road_width / 2, points[center_point+y][1])
+                d = self.Distance(top_left_pt, road_point)
+                y += p*int(d*math.sin(car_angle))
+                road_point = (points[center_point+y-z*p][0] - road_width / 2, points[center_point+y-z*p][1])
+                self.sensor_pts.append(road_point)
 
             #BOTTOM RIGHT SENSOR
             self.sensor_pts.append(bot_right_pt)
-            _,y = bot_right_pt
+            x,y = bot_right_pt
             y -= car_center_y
             y = int(round(y/segment_height))
-            road_point = (points[center_point+y][0] + road_width / 2, points[center_point+y][1])
-            d = self.Distance(bot_right_pt, road_point)
-            y -= p*int(d*math.sin(car_angle))
-            road_point = (points[center_point+y+z*p][0] + road_width / 2, points[center_point+y+z*p][1])
-            self.sensor_pts.append(road_point)
+            if points[center_point+y][0] - road_width / 2 > x or x > points[center_point+y][0] + road_width / 2: self.sensor_pts.append(bot_right_pt)
+            else:
+                road_point = (points[center_point+y][0] + road_width / 2, points[center_point+y][1])
+                d = self.Distance(bot_right_pt, road_point)
+                y -= p*int(d*math.sin(car_angle))
+                road_point = (points[center_point+y+z*p][0] + road_width / 2, points[center_point+y+z*p][1])
+                self.sensor_pts.append(road_point)
 
             #BOTTOM LEFT SENSOR
             self.sensor_pts.append(bot_left_pt)
-            _,y = bot_left_pt
+            x,y = bot_left_pt
             y -= car_center_y
             y = int(round(y/segment_height))
-            road_point = (points[center_point+y][0] - road_width / 2, points[center_point+y][1])
-            d = self.Distance(bot_left_pt, road_point)
-            y += p*int(d*math.sin(car_angle))
-            road_point = (points[center_point+y+z*p][0] - road_width / 2, points[center_point+y+z*p][1])
-            self.sensor_pts.append(road_point)
+            if points[center_point+y][0] - road_width / 2 > x or x > points[center_point+y][0] + road_width / 2: self.sensor_pts.append(bot_left_pt)
+            else:
+                road_point = (points[center_point+y][0] - road_width / 2, points[center_point+y][1])
+                d = self.Distance(bot_left_pt, road_point)
+                y += p*int(d*math.sin(car_angle))
+                road_point = (points[center_point+y+z*p][0] - road_width / 2, points[center_point+y+z*p][1])
+                self.sensor_pts.append(road_point)
 
+    # Return true if car is off road
+    def off_road(self): return self.off_road
 
     def GetSensorData(self,car_size, car_angle, car_pos):
         '''
@@ -136,14 +148,17 @@ class Sensor:
         #Generate sensors
         self.Generate(car_size, car_angle, car_pos)
 
-        # Array to store sensor data
+        # Array to store sensor data/Reset sensor data
         data = []
 
         # For each sensor line calculate the distance of line and store in data array
         for i in range(0,len(self.sensor_pts)-1,2):
-            pt1,pt2 = self.sensor_pts[0],self.sensor_pts[1]
+            pt1,pt2 = self.sensor_pts[i],self.sensor_pts[i+1]
             data.append(self.Distance(pt1,pt2))
 
-        #self.env.RenderSensor(self.sensor_pts)
+        if np.all(np.array(data) == 0): self.off_road = True
+        else: self.off_road = False
+
+        # self.env.RenderSensor(self.sensor_pts)
 
         return data
