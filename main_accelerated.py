@@ -3,6 +3,8 @@ from car import Car
 from road import Road
 import math
 import torch
+import os
+from datetime import datetime
 #Initialize Pygame
 pygame.init()
 
@@ -12,6 +14,7 @@ WIDTH, HEIGHT = 1000, 1000
 window = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption('Driving Simulator')
 
+os.environ["SDL_VIDEODRIVER"] = "dummy"
 #Colors
 BACKGROUND_COLOR = (100, 225, 100)
 
@@ -75,7 +78,7 @@ def Update():
 
     #Generate road dynamically based on car position
     car_pos = car.GetPosition()
-    #road.Generate(car_pos)
+    road.Generate(car_pos)
 
     #Render the road and car on to the window
     #Render()
@@ -86,6 +89,8 @@ def Update():
 
 if __name__ == "__main__":
 
+    print('Starting simulation.')
+    print('Start time:',datetime.now().time())
     Start() # Run initialization
 
     # Simulation loop
@@ -102,6 +107,7 @@ if __name__ == "__main__":
 
     # On quit, save simulation data
     Save()
+    print('End time:',datetime.now().time())
     print('Simulation Terminated')
     # Quit pygame when simulation is ended
     pygame.quit()

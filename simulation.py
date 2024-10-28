@@ -1,14 +1,15 @@
+import os
 import pygame
 from car import Car
 from road import Road
 import math
 import torch
-import threading
+import multiprocessing
+import os
+from datetime import datetime
+os.environ["SDL_VIDEODRIVER"] = "dummy"
 
-# Initialize Pygame
-pygame.init()
-
-# Display Settings
+# Simulation Settings
 FPS = 60
 WIDTH, HEIGHT = 1000, 1000
 BACKGROUND_COLOR = (100, 225, 100)
@@ -18,96 +19,87 @@ acceleration_path = 'models/acceleration_network.pth'
 turn_path = 'models/turn_network.pth'
 value_path = 'models/value_network.pth'
 
-# Font
-font = pygame.font.SysFont('Arial', 32)
+def run_simulation(simulation_number):
+    
+    pygame.init()
 
-class Simulation(threading.Thread):
-    def __init__(self, simulation_id):
-        threading.Thread.__init__(self)
-        self.simulation_id = simulation_id
-        self.running = True
-        self.window = pygame.display.set_mode((WIDTH, HEIGHT))
-        pygame.display.set_caption(f'Driving Simulator {self.simulation_id}')
+    # Setup display and clock for each simulation
+    window = pygame.display.set_mode((WIDTH, HEIGHT))
+    pygame.display.set_caption(f'Driving Simulator {simulation_number}')
+    clock = pygame.time.Clock()
+    font = pygame.font.SysFont('Arial', 32)
 
-        # Car and Road objects
-        self.road = Road(self.window)
-        self.car = Car(self.window, self.road)
-        self.clock = pygame.time.Clock()
+    # Initialize Road and Car objects
+    road = Road(window)
+    car = Car(window, road,simulation_number)
 
-    def RenderSpeedometer(self):
-        speed_text = font.render('Speed: '+str(round(-self.car.GetSpeed(), 2)), True, (255, 255, 255))
-        angle_text = font.render('Angle: '+str(round(self.car.GetAngle(), 2)), True, (255, 255, 255))
-        self.window.blit(speed_text, (5, 0))
-        self.window.blit(angle_text, (5, 40))
+    def RenderSpeedometer():
+        speed_text = font.render('Speed: '+str(round(-car.GetSpeed(), 2)), True, (255, 255, 255))
+        angle_text = font.render('Angle: '+str(round(car.GetAngle(), 2)), True, (255, 255, 255))
+        window.blit(speed_text, (5, 0))
+        window.blit(angle_text, (5, 40))
 
-    def RenderSimulationCount(self):
-        count_text = font.render('Simulation: '+str(self.car.simulation_count())+'/1000', True, (255, 255, 255))
-        self.window.blit(count_text, (5, 80))
+    def RenderSimulationCount():
+        count_text = font.render('Simulation: '+str(car.simulation_count())+'/1000', True, (255, 255, 255))
+        window.blit(count_text, (5, 80))
 
-    def Render(self):
-        # Render the road and car on the window
-        self.road.Render()
-        self.car.Render()
-        # Render sensor
-        self.road.RenderSensor(self.car.GetSensorPts())
-        # Print car speed and angle
-        self.RenderSpeedometer()
-        # Print simulation number
-        self.RenderSimulationCount()
+    def Render():
+        road.Render()
+        car.Render()
+        road.RenderSensor(car.GetSensorPts())
+        RenderSpeedometer()
+        RenderSimulationCount()
 
-    def Save(self):
-        # Save models
-        torch.save(self.car.GetNetworks()[0].state_dict(), acceleration_path)
-        torch.save(self.car.GetNetworks()[1].state_dict(), turn_path)
-        torch.save(self.car.GetNetworks()[2].state_dict(), value_path)
-        # Save trajectory data
-        self.car.SaveData()
+    def Save():
+        torch.save(car.GetNetworks()[0].state_dict(), acceleration_path)
+        torch.save(car.GetNetworks()[1].state_dict(), turn_path)
+        torch.save(car.GetNetworks()[2].state_dict(), value_path)
+        car.SaveData()
 
-    def Start(self): self.car.Reset()
+    def Start(): car.Reset()
 
-    def Update(self):
-        # Set simulation FPS
-        self.clock.tick(FPS)
+    def Update():
+        # Run car's movement and update road
+        car.Run()
+        car_pos = car.GetPosition()
+        road.Generate(car_pos)
 
-        # Reset screen background
-        self.window.fill(BACKGROUND_COLOR)
+    # Start the simulation
+    Start()
+    running = True
 
-        # Update for car movement based on user input
-        self.car.Run()
+    while running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT: running = False
 
-        # Generate road dynamically based on car position
-        car_pos = self.car.GetPosition()
-        self.road.Generate(car_pos)
+        if car.simulation_count() >= 999: running = False
+        else:
+            # Perform updates and render
+            Update()
+            Render()
+            pygame.display.update()
+            clock.tick(FPS)
 
-        # Render the road and car on the window
-        self.Render()
+    # Save data when simulation ends
+    Save()
+    print(f'Simulation {simulation_number} Terminated')
+    pygame.quit()
 
-        # Update display
-        pygame.display.update()
+def start_simulations(num_simulations):
+    print('Starting',num_simulations,'simulations.')
+    print('Start time:',datetime.now().time())
+    processes = []
+    for i in range(num_simulations):
+        process = multiprocessing.Process(target=run_simulation, args=(i+1,))
+        processes.append(process)
+        process.start()
 
-    def run(self):
-        self.Start()  # Run initialization
-        while self.running:
-            # Stop main loop when user closes window or simulation limit is reached
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT: self.running = False
-            if self.car.simulation_count() >= 1000:
-                self.running = False
-            # Otherwise, update the window accordingly
-            self.Update()
-
-        # On quit, save simulation data
-        self.Save()
-        pygame.quit()
+    # Wait for all processes to complete
+    for process in processes:
+        process.join()
+    print('End time:',datetime.now().time())
+    print('All simulations completed.')
 
 if __name__ == "__main__":
-    n = 5  # Number of simulations to run in parallel
-    simulations = [Simulation(i) for i in range(n)]
-
-    # Start all simulations
-    for sim in simulations: sim.start()
-
-    # Wait for all simulations to finish
-    for sim in simulations: sim.join()
-
-    print("All simulations completed.")
+    num_simulations = 1  # Set the number of simulations to run concurrently
+    start_simulations(num_simulations)

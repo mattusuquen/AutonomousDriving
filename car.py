@@ -11,11 +11,10 @@ import random
 
 class Car:
 
-    def __init__(self,window,env):
+    def __init__(self,window,env,sim_id=None):
         # Set simulation window
         self.window = window
         self.WIDTH, self.HEIGHT = window.get_size()
-
         # Enviornment
         self.env = env
 
@@ -36,7 +35,7 @@ class Car:
         # Networks
         input_size = 4*self.num_of_sensors+2
         self.accel_policy = PolicyNetwork(input_size,mean_range=1,stdev_coeff=0.1)
-        self.turn_policy = PolicyNetwork(input_size,mean_range=1,stdev_coeff=0.1)
+        self.turn_policy = PolicyNetwork(input_size,mean_range=2,stdev_coeff=0.1)
         self.value_network = ValueNetwork(input_size)
 
         # Load networks if exists
@@ -51,7 +50,8 @@ class Car:
         self.resetTimeLimit = 100
 
         # Data .csv location
-        self.trajectories_path = 'data/trajectories.csv'
+        if sim_id: self.trajectories_path = 'data/trajectories_'+str(sim_id)+'.csv'
+        else: self.trajectories_path = 'data/trajectories.csv'
         # Dataframe
         self.columns = ['state_'+str(i+1) for i in range(self.num_of_sensors*4+2)] + ['action_1','action_2','reward']
         self.trajectories = []
@@ -125,20 +125,23 @@ class Car:
         x1,x2 = points[self.HEIGHT // 2][0], points[self.HEIGHT // 2 - 1][0]
         y1,y2 = points[self.HEIGHT // 2][1], points[self.HEIGHT//2 - 1][1]
         # Calculate slope inline with current orientation
-        angle = 90
+        angle = 0
         if x2 - x1 != 0: 
             m = (y2 - y1) / (x2 - x1)
             # Recalculate angle
             angle = math.degrees(-math.atan(m))
 
+        diff_in_angle = (angle-self.car_angle)%360
+        if diff_in_angle > 180: diff_in_angle = 360 - diff_in_angle
+
         dist_reward = dist_from_start
-        alignment_reward = (road_width - offset) / road_width
-        angle_reward = (angle - self.car_angle) / angle
-
+        alignment_reward = offset / road_width/2
+        angle_reward = diff_in_angle/180
+        
         reward = min_reward
-
-        if not self.sensor.off_road and self.car_speed >= 1: reward = (dist_reward + 1) * -0.5 *(alignment_reward ** 2 + angle_reward ** 2 + 1)
-
+        # Calculate total reward
+        #if offset < road_width/2 and self.car_speed <= 1: reward = (dist_reward + 1) * -0.5 *(alignment_reward ** 2 + angle_reward ** 2 - 2) + min_reward
+        if offset < road_width/2 and self.car_speed <= 1: reward = -0.5 *(alignment_reward ** 2 + angle_reward ** 2 - 2) + min_reward
         return reward
 
     def Render(self):
