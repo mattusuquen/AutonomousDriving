@@ -65,23 +65,23 @@ def Start(): car.Reset()
 #Run every frame update
 def Update():
     #Set simulation FPS
-    clock.tick(FPS)
-
+    #clock.tick(FPS)
+    
     # Reset screen background
-    window.fill(BACKGROUND_COLOR)
+    #window.fill(BACKGROUND_COLOR)
 
     #Update for car movement based on user input
     car.Run()
 
     #Generate road dynamically based on car position
     car_pos = car.GetPosition()
-    road.Generate(car_pos)
+    #road.Generate(car_pos)
 
     #Render the road and car on to the window
-    Render()
+    #Render()
     
     # Update display
-    pygame.display.update()
+    #pygame.display.update()
 
 
 if __name__ == "__main__":

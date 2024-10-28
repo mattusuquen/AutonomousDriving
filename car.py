@@ -63,11 +63,7 @@ class Car:
         # Rescale car image
         self.car_image = pygame.transform.scale(self.car_image, self.car_size)
 
-<<<<<<< HEAD
     def simulation_count(self): return len(self.trajectories)//self.resetTimeLimit
-=======
-
->>>>>>> 8b84eab937deecec6fc53e0e922f3612d8bfd2df
     def GetNetworks(self): return self.accel_policy, self.turn_policy, self.value_network
 
     # Return data from sensors
@@ -125,11 +121,25 @@ class Car:
 
         # Distance travelled
         dist_from_start = math.sqrt((self.car_x)**2 + (self.car_y)**2)
+        points = self.env.get_points()
+        x1,x2 = points[self.HEIGHT // 2][0], points[self.HEIGHT // 2 - 1][0]
+        y1,y2 = points[self.HEIGHT // 2][1], points[self.HEIGHT//2 - 1][1]
+        # Calculate slope inline with current orientation
+        angle = 90
+        if x2 - x1 != 0: 
+            m = (y2 - y1) / (x2 - x1)
+            # Recalculate angle
+            angle = math.degrees(-math.atan(m))
 
-        # Return calculated reward
-        if offset < road_width: return (1 - min_reward) * ((road_width - offset) / road_width) + min_reward + dist_from_start
-        if self.car_speed < 1: return min_reward
-        return min_reward
+        dist_reward = dist_from_start
+        alignment_reward = (road_width - offset) / road_width
+        angle_reward = (angle - self.car_angle) / angle
+
+        reward = min_reward
+
+        if not self.sensor.off_road and self.car_speed >= 1: reward = (dist_reward + 1) * -0.5 *(alignment_reward ** 2 + angle_reward ** 2 + 1)
+
+        return reward
 
     def Render(self):
         '''
@@ -186,7 +196,6 @@ class Car:
         if self.resetTimer >= self.resetTimeLimit: self.Reset()
         else: self.resetTimer += 1
 
-<<<<<<< HEAD
     def StoreTrajectory(self,trajectory): 
         if self.sensor.off_road: # If car off road end simulation
             self.trajectories += [trajectory]*(self.resetTimeLimit-self.resetTimer)
@@ -198,11 +207,6 @@ class Car:
         Save trajectory data in a data frame
         Save data frame in csv file
         '''
-=======
-    def StoreTrajectory(self,trajectory): self.trajectories.append(trajectory)
-
-    def SaveData(self):
->>>>>>> 8b84eab937deecec6fc53e0e922f3612d8bfd2df
         dataframe = pd.DataFrame(self.trajectories,columns=self.columns)
         dataframe.to_csv(self.trajectories_path)
 
