@@ -44,7 +44,7 @@ def Render():
     road.Render()
     car.Render()
     # Render sensor
-    road.RenderSensor(car.GetSensorPts())
+    #road.RenderSensor(car.GetSensorPts())
     # Print car speed and angle
     RenderSpeedometer()
     # Print simulation number
