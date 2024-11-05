@@ -8,6 +8,8 @@ from datetime import datetime
 #Initialize Pygame
 pygame.init()
 
+num_of_simulations = 1000
+
 #Display Settings
 FPS = 60
 WIDTH, HEIGHT = 1000, 1000
@@ -100,7 +102,7 @@ if __name__ == "__main__":
             acceleration_network, turn_network, value_network = car.GetNetworks()
             if event.type == pygame.QUIT: running = False
         # If 1000 simulations ran, exit
-        if car.simulation_count() >= 999: running = False
+        if car.simulation_count() == num_of_simulations: running = False
 
         # Otherwise, update the window accordingly
         Update()

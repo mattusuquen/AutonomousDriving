@@ -17,7 +17,7 @@ class Car:
         self.WIDTH, self.HEIGHT = window.get_size()
         # Enviornment
         self.env = env
-
+        self.simulation_count = 0
         # Sensor parameters
         self.num_of_sensors = 50
         self.sensor = Sensor(window, env, self.num_of_sensors)
@@ -63,7 +63,8 @@ class Car:
         # Rescale car image
         self.car_image = pygame.transform.scale(self.car_image, self.car_size)
 
-    def simulation_count(self): return len(self.trajectories)//self.resetTimeLimit
+    def simulation_count(self): return self.simulation_count
+
     def GetNetworks(self): return self.accel_policy, self.turn_policy, self.value_network
 
     # Return data from sensors
@@ -93,6 +94,7 @@ class Car:
         angle = self.env.Recenter() # Reposition road so car initialized on the road
         self.SetRotation(angle) # Adjust car orientation
         self.resetTimer = 0
+        self.simulation_count += 1
 
     def ClampRotation(self):
         '''
@@ -196,8 +198,8 @@ class Car:
         self.StoreTrajectory(trajectory)
         
         # Simulation reset scheduling
+        self.resetTimer += 1
         if self.resetTimer >= self.resetTimeLimit: self.Reset()
-        else: self.resetTimer += 1
 
     def StoreTrajectory(self,trajectory): 
         if self.sensor.off_road: # If car off road end simulation
