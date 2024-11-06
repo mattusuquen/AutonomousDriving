@@ -5,10 +5,11 @@ import math
 import torch
 import os
 from datetime import datetime
+from config import num_of_simulations
+os.environ["SDL_VIDEODRIVER"] = "dummy"
 #Initialize Pygame
 pygame.init()
 
-num_of_simulations = 1000
 
 #Display Settings
 FPS = 60
@@ -102,8 +103,7 @@ if __name__ == "__main__":
             acceleration_network, turn_network, value_network = car.GetNetworks()
             if event.type == pygame.QUIT: running = False
         # If 1000 simulations ran, exit
-        if car.simulation_count() == num_of_simulations: running = False
-
+        if car.simulation_count > num_of_simulations: running = False
         # Otherwise, update the window accordingly
         Update()
 

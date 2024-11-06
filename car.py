@@ -8,7 +8,7 @@ import torch
 import os
 import pandas as pd
 import random
-
+from config import simulation_length
 class Car:
 
     def __init__(self,window,env,sim_id=None):
@@ -47,7 +47,7 @@ class Car:
         if os.path.exists(value_path): self.value_network.load_state_dict(torch.load(value_path))
 
         self.resetTimer = 0
-        self.resetTimeLimit = 100
+        self.resetTimeLimit = simulation_length
 
         # Data .csv location
         if sim_id: self.trajectories_path = 'data/trajectories_'+str(sim_id)+'.csv'
@@ -196,13 +196,13 @@ class Car:
         # Store trajectory (state, action, reward)
         trajectory = state+[self.acceleration]+[self.turn_speed]+[reward]
         self.StoreTrajectory(trajectory)
-        
         # Simulation reset scheduling
         self.resetTimer += 1
-        if self.resetTimer >= self.resetTimeLimit: self.Reset()
+        if self.resetTimer == self.resetTimeLimit: self.Reset()
 
     def StoreTrajectory(self,trajectory): 
         if self.sensor.off_road: # If car off road end simulation
+            # Fill rest of trajectory data for simulation with crashed state
             self.trajectories += [trajectory]*(self.resetTimeLimit-self.resetTimer)
             self.resetTimer = self.resetTimeLimit
         else: self.trajectories.append(trajectory)

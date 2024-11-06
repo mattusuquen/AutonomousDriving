@@ -3,9 +3,9 @@ from car import Car
 from road import Road
 import math
 import torch
+from config import num_of_simulations
 #Initialize Pygame
 pygame.init()
-num_of_simulations = 1000
 #Display Settings
 FPS = 60
 WIDTH, HEIGHT = 1000, 1000
@@ -36,7 +36,7 @@ def RenderSpeedometer():
     window.blit(angle_text,(5,40))
 
 def RenderSimulationCount():
-    count_text = font.render('Simulation: '+str(car.simulation_count())+'/1000', True, (255, 255, 255))
+    count_text = font.render('Simulation: '+str(car.simulation_count)+'/1000', True, (255, 255, 255))
     window.blit(count_text,(5,80))
 
 def Render():
@@ -95,7 +95,7 @@ if __name__ == "__main__":
             acceleration_network, turn_network, value_network = car.GetNetworks()
             if event.type == pygame.QUIT: running = False
         # If 1000 simulations ran, exit
-        if car.simulation_count() == num_of_simulations: running = False
+        if car.simulation_count > num_of_simulations: running = False
 
         # Otherwise, update the window accordingly
         Update()
