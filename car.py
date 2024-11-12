@@ -90,6 +90,7 @@ class Car:
     def Reset(self):
         self.car_x = 0
         self.car_y = 0
+        self.car_speed = 0
         self.env.Generate((0,0),seed=random.uniform(0,1))
         angle = self.env.Recenter() # Reposition road so car initialized on the road
         self.SetRotation(angle) # Adjust car orientation
@@ -193,12 +194,12 @@ class Car:
         # Updating the state space
         self.Move()
 
-        # Store trajectory (state, action, reward)
         trajectory = state+[self.acceleration]+[self.turn_speed]+[reward]
         self.StoreTrajectory(trajectory)
         # Simulation reset scheduling
         self.resetTimer += 1
-        if self.resetTimer == self.resetTimeLimit: self.Reset()
+        # Store trajectory (state, action, reward)
+        if self.resetTimer >= self.resetTimeLimit: self.Reset()
 
     def StoreTrajectory(self,trajectory): 
         if self.sensor.off_road: # If car off road end simulation

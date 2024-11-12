@@ -7,9 +7,9 @@ import os
 from datetime import datetime
 from config import num_of_simulations
 os.environ["SDL_VIDEODRIVER"] = "dummy"
+
 #Initialize Pygame
 pygame.init()
-
 
 #Display Settings
 FPS = 60
@@ -17,12 +17,10 @@ WIDTH, HEIGHT = 1000, 1000
 window = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption('Driving Simulator')
 
+# Hide display
 os.environ["SDL_VIDEODRIVER"] = "dummy"
-#Colors
-BACKGROUND_COLOR = (100, 225, 100)
 
 running = True
-clock = pygame.time.Clock()
 
 #Car and Road objects
 road = Road(window)
@@ -33,30 +31,10 @@ acceleration_path = 'models/acceleration_network.pth'
 turn_path = 'models/turn_network.pth'
 value_path = 'models/value_network.pth'
 
-font = pygame.font.SysFont('Arial', 32)
-
-def RenderSpeedometer():
-    speed_text = font.render('Speed: '+str(round(-car.GetSpeed(),2)), True, (255, 255, 255))
-    angle_text = font.render('Angle: '+str(round(car.GetAngle(),2)), True, (255, 255, 255))
-    window.blit(speed_text,(5,0))
-    window.blit(angle_text,(5,40))
-
-def RenderSimulationCount():
-    count_text = font.render('Simulation: '+str(car.simulation_count())+'/1000', True, (255, 255, 255))
-    window.blit(count_text,(5,80))
-
-def Render():
-    # Render the road and car on to the window
-    road.Render()
-    car.Render()
-    # Render sensor
-    road.RenderSensor(car.GetSensorPts())
-    # Print car speed and angle
-    RenderSpeedometer()
-    # Print simulation number
-    RenderSimulationCount()
-
 def Save():
+    # Get networks from car
+    acceleration_network, turn_network, value_network = car.GetNetworks()
+
     # Save models
     torch.save(acceleration_network.state_dict(), acceleration_path)
     torch.save(turn_network.state_dict(), turn_path)
@@ -70,12 +48,6 @@ def Start(): car.Reset()
 
 #Run every frame update
 def Update():
-    #Set simulation FPS
-    #clock.tick(FPS)
-    
-    # Reset screen background
-    #window.fill(BACKGROUND_COLOR)
-
     #Update for car movement based on user input
     car.Run()
 
@@ -83,33 +55,32 @@ def Update():
     car_pos = car.GetPosition()
     road.Generate(car_pos)
 
-    #Render the road and car on to the window
-    #Render()
-    
-    # Update display
-    #pygame.display.update()
-
 
 if __name__ == "__main__":
 
     print('Starting simulation.')
-    print('Start time:',datetime.now().time())
+    start_time = datetime.now()
     Start() # Run initialization
 
     # Simulation loop
     while running:
         # Stop main loop when user closes window
         for event in pygame.event.get():
-            acceleration_network, turn_network, value_network = car.GetNetworks()
             if event.type == pygame.QUIT: running = False
         # If 1000 simulations ran, exit
-        if car.simulation_count > num_of_simulations: running = False
+        if car.simulation_count > num_of_simulations: break
         # Otherwise, update the window accordingly
         Update()
 
     # On quit, save simulation data
     Save()
-    print('End time:',datetime.now().time())
+
+    # Print time taken to complete data collection
+    time_elapsed = abs(datetime.now()-start_time).total_seconds()
+    minutes = int(time_elapsed // 60)
+    seconds = round(time_elapsed % 60)
+    print('Time elapsed:', minutes, 'minutes', seconds, 'seconds')
     print('Simulation Terminated')
+
     # Quit pygame when simulation is ended
     pygame.quit()
