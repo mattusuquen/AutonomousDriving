@@ -110,11 +110,8 @@ class Car:
         road_center = self.env.get_center_pt()-self.WIDTH/2
         return abs(road_center)
 
-    
+    '''
     def Reward(self):
-        '''
-        Reward function
-        '''
         # Minimum possible reward
         min_reward = 1e-6
 
@@ -144,8 +141,13 @@ class Car:
         reward = min_reward
         # Calculate total reward
         #if offset < road_width/2 and self.car_speed <= 1: reward = (dist_reward + 1) * -0.5 *(alignment_reward ** 2 + angle_reward ** 2 - 2) + min_reward
-        if offset < road_width/2 and self.car_speed <= 1: reward = -0.5 *(alignment_reward ** 2 + angle_reward ** 2 - 2) + min_reward
+        if offset < road_width/2 and self.car_speed >= 1: reward = -0.5 *(alignment_reward ** 2 + angle_reward ** 2 - 2) + min_reward
         return reward
+    '''
+    def Reward(self): 
+        if self.sensor.off_road: return 0
+        elif self.car_speed < 1: 0.5
+        return 1
 
     def Render(self):
         '''
