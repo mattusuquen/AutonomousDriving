@@ -150,11 +150,11 @@ class Sensor:
 
         # Array to store sensor data/Reset sensor data
         data = []
-
+        road_width = self.env.get_road_width()
         # For each sensor line calculate the distance of line and store in data array
         for i in range(0,len(self.sensor_pts)-1,2):
             pt1,pt2 = self.sensor_pts[i],self.sensor_pts[i+1]
-            data.append(self.Distance(pt1,pt2))
+            data.append(min(self.Distance(pt1,pt2), road_width)/(road_width*self.num_of_sensors))
 
         if np.all(np.array(data) == 0): self.off_road = True
         else: self.off_road = False
