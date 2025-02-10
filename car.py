@@ -31,11 +31,14 @@ class Car:
         self.friction = 0.05
         self.turn_speed = 2
         self.car_size = (50,100)
+        
+        self.crashed = False
+        self.survived = []
 
         # Networks
         input_size = 4*self.num_of_sensors+2
-        self.accel_policy = PolicyNetwork(input_size,mean_range=1,stdev_coeff=0.1)
-        self.turn_policy = PolicyNetwork(input_size,mean_range=2,stdev_coeff=0.1)
+        self.accel_policy = PolicyNetwork(input_size,mean_range=1,stdev_coeff=0.5)
+        self.turn_policy = PolicyNetwork(input_size,mean_range=3,stdev_coeff=0.5)
         self.value_network = ValueNetwork(input_size)
 
         # Load networks if exists
@@ -96,6 +99,10 @@ class Car:
         self.SetRotation(angle) # Adjust car orientation
         self.resetTimer = 0
         self.simulation_count += 1
+
+        if self.crashed: self.survived.append(0)
+        else: self.survived.append(1)
+        self.crashed = False
 
     def ClampRotation(self):
         '''
@@ -208,6 +215,7 @@ class Car:
             # Fill rest of trajectory data for simulation with crashed state
             self.trajectories += [trajectory]*(self.resetTimeLimit-self.resetTimer)
             self.resetTimer = self.resetTimeLimit
+            self.crashed = True
         else: self.trajectories.append(trajectory)
 
     def SaveData(self):
@@ -217,6 +225,8 @@ class Car:
         '''
         dataframe = pd.DataFrame(self.trajectories,columns=self.columns)
         dataframe.to_csv(self.trajectories_path)
+
+        print('Survival rate:',round(np.array(self.survived).mean()*100,2),'%')
 
 
     def Move(self):

@@ -19,6 +19,6 @@ class PolicyNetwork(nn.Module):
     def forward(self, x):
         logits = self.layers(x)
         logits[:, 0] = torch.tanh(logits[:, 0]) * self.mean_range
-        logits[:, 1] = torch.sigmoid(logits[:, 1]) * self.stdev_coeff
+        logits[:, 1] = torch.clamp(torch.sigmoid(logits[:, 1]) * self.stdev_coeff,min=0.05)
         
         return logits
